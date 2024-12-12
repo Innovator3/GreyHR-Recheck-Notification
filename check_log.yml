@@ -1,0 +1,51 @@
+name: Selenium Attendance Automation
+
+on:
+  schedule:
+    # Morning schedule (11:00 AM IST, Monday to Saturday)
+    - cron: '30 5 * * 1-6'  # 11:00 AM IST (5:30 AM UTC, Monday to Saturday)
+
+    # Evening schedule (8:30 PM IST, Monday to Saturday)
+    - cron: '00 15 * * 1-6'  # 8:30 PM IST (3:00 PM UTC, Monday to Saturday)
+
+  workflow_dispatch:  # Enables the "Run workflow" button for manual trigger
+
+
+jobs:
+  attendance:
+    runs-on: windows-latest  # Use Windows runner instead of Ubuntu
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install selenium requests
+
+      - name: Install ChromeDriver
+        run: |
+          # Fetch the latest stable ChromeDriver version
+          $chromeDriverVersion = Invoke-RestMethod "https://chromedriver.storage.googleapis.com/LATEST_RELEASE"
+          Write-Host "ChromeDriver version: $chromeDriverVersion"
+          
+          # Download the ChromeDriver
+          Invoke-WebRequest "https://chromedriver.storage.googleapis.com/$chromeDriverVersion/chromedriver_win32.zip" -OutFile "chromedriver.zip"
+          
+          # Unzip the ChromeDriver and install it to the PATH
+          Expand-Archive -Path "chromedriver.zip" -DestinationPath "$env:USERPROFILE\chromedriver"
+          [Environment]::SetEnvironmentVariable("PATH", "$env:USERPROFILE\chromedriver", [System.EnvironmentVariableTarget]::User)
+
+      - name: Run Selenium script
+        env:
+          GREYTHR_USERNAME: ${{ secrets.GREYTHR_USERNAME }}
+          GREYTHR_PASSWORD: ${{ secrets.GREYTHR_PASSWORD }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python greyhr.py

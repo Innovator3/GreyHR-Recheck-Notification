@@ -1,0 +1,61 @@
+name: Selenium Attendance Automation
+
+on:
+  schedule:
+    # Morning schedule (10:00 AM to 10:25 AM IST, Monday to Saturday with 5-minute gaps)
+    - cron: '30 4 * * 1'  # 10:00 AM IST Monday (4:30 AM UTC)
+    - cron: '35 4 * * 2'  # 10:05 AM IST Tuesday (4:35 AM UTC)
+    - cron: '40 4 * * 3'  # 10:10 AM IST Wednesday (4:40 AM UTC)
+    - cron: '45 4 * * 4'  # 10:15 AM IST Thursday (4:45 AM UTC)
+    - cron: '50 4 * * 5'  # 10:20 AM IST Friday (4:50 AM UTC)
+    - cron: '55 4 * * 6'  # 10:25 AM IST Saturday (4:55 AM UTC)
+    
+    # Evening schedule (7:15 PM to 7:40 PM IST, Monday to Saturday with 5-minute gaps)
+    - cron: '45 13 * * 1'  # 7:15 PM IST Monday (1:45 PM UTC)
+    - cron: '50 13 * * 2'  # 7:20 PM IST Tuesday (1:50 PM UTC)
+    - cron: '55 13 * * 3'  # 7:25 PM IST Wednesday (1:55 PM UTC)
+    - cron: '00 14 * * 4'  # 7:30 PM IST Thursday (2:00 PM UTC)
+    - cron: '05 14 * * 5'  # 7:35 PM IST Friday (2:05 PM UTC)
+    - cron: '10 14 * * 6'  # 7:40 PM IST Saturday (2:10 PM UTC)
+
+  workflow_dispatch:  # Enables the "Run workflow" button for manual trigger
+
+
+jobs:
+  attendance:
+    runs-on: windows-latest  # Use Windows runner instead of Ubuntu
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install selenium requests
+
+      - name: Install ChromeDriver
+        run: |
+          # Fetch the latest stable ChromeDriver version
+          $chromeDriverVersion = Invoke-RestMethod "https://chromedriver.storage.googleapis.com/LATEST_RELEASE"
+          Write-Host "ChromeDriver version: $chromeDriverVersion"
+          
+          # Download the ChromeDriver
+          Invoke-WebRequest "https://chromedriver.storage.googleapis.com/$chromeDriverVersion/chromedriver_win32.zip" -OutFile "chromedriver.zip"
+          
+          # Unzip the ChromeDriver and install it to the PATH
+          Expand-Archive -Path "chromedriver.zip" -DestinationPath "$env:USERPROFILE\chromedriver"
+          [Environment]::SetEnvironmentVariable("PATH", "$env:USERPROFILE\chromedriver", [System.EnvironmentVariableTarget]::User)
+
+      - name: Run Selenium script
+        env:
+          GREYTHR_USERNAME: ${{ secrets.GREYTHR_USERNAME }}
+          GREYTHR_PASSWORD: ${{ secrets.GREYTHR_PASSWORD }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python greyhr.py
