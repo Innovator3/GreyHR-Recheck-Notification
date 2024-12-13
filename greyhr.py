@@ -46,7 +46,7 @@ chrome_options.add_argument("--disable-gpu")  # Required for headless mode in so
 # Define time ranges for attendance
 morning_start = dt_time(9, 30)  # 9:30 AM
 morning_end = dt_time(11, 30)  # 11:30 AM
-night_start = dt_time(13, 0)   # 6:00 PM
+night_start = dt_time(18, 0)   # 6:00 PM
 night_end = dt_time(23, 0)     # 11:00 PM
 
 # Get current time in IST
