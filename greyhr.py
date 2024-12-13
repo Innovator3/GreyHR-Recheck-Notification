@@ -46,12 +46,15 @@ chrome_options.add_argument("--disable-gpu")  # Required for headless mode in so
 # Define time ranges for attendance
 morning_start = dt_time(9, 30)  # 9:30 AM
 morning_end = dt_time(11, 30)  # 11:30 AM
-night_start = dt_time(18, 0)   # 6:00 PM
+night_start = dt_time(13, 0)   # 6:00 PM
 night_end = dt_time(23, 0)     # 11:00 PM
 
 # Get current time in IST
 ist = pytz.timezone("Asia/Kolkata")
 current_time = datetime.now(ist).time()
+
+# Initialize driver to None
+driver = None
 
 try:
     # Check if the script is running within the allowed time range
@@ -116,4 +119,6 @@ except Exception as ex:
     send_telegram_message("An error occurred while processing attendance. Check logs for details.")
 
 finally:
-    driver.quit()
+    # Quit the driver only if it was initialized
+    if driver:
+        driver.quit()
